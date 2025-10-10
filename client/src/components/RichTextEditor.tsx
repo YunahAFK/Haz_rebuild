@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
-import ReactQuill from 'react-quill';
+import ReactQuill, { Quill } from 'react-quill';
+import ImageResize from 'quill-image-resize-module-react';
 import 'react-quill/dist/quill.snow.css';
+
+Quill.register('modules/imageResize', ImageResize);
 
 interface RichTextEditorProps {
   value: string;
@@ -21,6 +24,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
       ['code-block', 'blockquote'],
       ['clean']
     ],
+
+    imageResize: {
+      parchment: Quill.import('parchment'),
+      modules: ['Resize', 'DisplaySize']
+    }
   };
 
   const formats = [

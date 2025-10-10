@@ -3,27 +3,34 @@ import { useRoute, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { useAuth } from '@/context/AuthContext';
 import { useLectures } from '@/context/LectureContext';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'wouter';
-import { 
-  BarChart3, 
-  Book, 
-  PlusCircle, 
-  Users, 
-  Settings, 
+import {
+  BarChart3,
+  Book,
+  PlusCircle,
+  Users,
+  Settings,
   Save,
   Eye,
-  Check
+  Check,
+  Trash2,
+  GitBranchPlus,
+  ArrowRight
 } from 'lucide-react';
+import { QuizQuestion, Simulation, SimulationStep } from '@shared/schema';
+import { nanoid } from 'nanoid';
 
 const categories = [
   'mathematics',
-  'science', 
+  'science',
   'programming',
   'language',
   'art',
@@ -41,14 +48,30 @@ export default function CreateLecture() {
   const { toast } = useToast();
   const isEditing = Boolean(match && params?.id);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    category: string;
+    author: string;
+    content: string;
+    published: boolean;
+    featured: boolean;
+    allowComments: boolean;
+    quiz: QuizQuestion[];
+    simulation: Simulation | undefined;
+    cardImageUrl?: string;
+    cardDescription?: string;
+  }>({
     title: '',
     category: '',
     author: userProfile?.name || '',
     content: '',
     published: false,
     featured: false,
-    allowComments: true
+    allowComments: true,
+    quiz: [],
+    simulation: undefined,
+    cardImageUrl: '',
+    cardDescription: '',
   });
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
@@ -79,7 +102,11 @@ export default function CreateLecture() {
           content: lecture.content,
           published: lecture.published,
           featured: lecture.featured,
-          allowComments: lecture.allowComments
+          allowComments: lecture.allowComments,
+          quiz: lecture.quiz || [],
+          simulation: lecture.simulation || undefined,
+          cardImageUrl: lecture.cardImageUrl || '',
+          cardDescription: lecture.cardDescription || '',
         });
       }
     } catch (error) {
@@ -93,6 +120,73 @@ export default function CreateLecture() {
     }
   }
 
+  // --- Quiz Handlers ---
+  const handleQuizChange = (index: number, updatedQuestion: QuizQuestion) => {
+    const newQuiz = [...formData.quiz];
+    newQuiz[index] = updatedQuestion;
+    setFormData(prev => ({ ...prev, quiz: newQuiz }));
+  };
+
+  const addQuestion = () => {
+    setFormData(prev => ({
+      ...prev,
+      quiz: [...prev.quiz, { id: nanoid(), question: '', options: ['', '', '', ''], correctAnswer: 0 }]
+    }));
+  };
+
+  const removeQuestion = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      quiz: prev.quiz.filter((_, i) => i !== index)
+    }));
+  };
+
+  // --- Simulation Handlers ---
+  const handleAddSimulation = () => {
+    const startStepId = nanoid();
+    setFormData(prev => ({
+      ...prev,
+      simulation: {
+        startStepId: startStepId,
+        steps: [{ id: startStepId, scenario: '', choices: [] }]
+      }
+    }));
+  };
+  
+  const handleRemoveSimulation = () => {
+    setFormData(prev => ({ ...prev, simulation: undefined }));
+  };
+
+  const handleSimulationChange = (updatedSimulation: Simulation) => {
+    setFormData(prev => ({ ...prev, simulation: updatedSimulation }));
+  };
+
+  const handleAddStep = () => {
+    if (!formData.simulation) return;
+    const newStep: SimulationStep = { id: nanoid(), scenario: '', choices: [] };
+    handleSimulationChange({
+      ...formData.simulation,
+      steps: [...formData.simulation.steps, newStep]
+    });
+  };
+
+  const handleRemoveStep = (stepId: string) => {
+    if (!formData.simulation) return;
+    const newSim = { ...formData.simulation };
+    // Filter out the step to be removed
+    newSim.steps = newSim.steps.filter(step => step.id !== stepId);
+    // Remove choices in other steps that point to the deleted step
+    newSim.steps.forEach(step => {
+      step.choices = step.choices.filter(choice => choice.nextStepId !== stepId);
+    });
+    // If we deleted the start step, reset the simulation
+    if (newSim.startStepId === stepId) {
+      handleRemoveSimulation();
+    } else {
+      handleSimulationChange(newSim);
+    }
+  };
+  
   const handleSubmit = async (e: React.FormEvent, isDraft = false) => {
     e.preventDefault();
     
@@ -107,23 +201,14 @@ export default function CreateLecture() {
 
     setLoading(true);
     try {
-      const lectureData = {
-        ...formData,
-        published: isDraft ? false : formData.published
-      };
+      const lectureData = { ...formData, published: isDraft ? false : formData.published };
 
       if (isEditing && params?.id) {
         await updateLecture(params.id, lectureData);
-        toast({
-          title: "Success",
-          description: "Lecture updated successfully!",
-        });
+        toast({ title: "Success", description: "Lecture updated successfully!" });
       } else {
         await createLecture(lectureData);
-        toast({
-          title: "Success", 
-          description: "Lecture created successfully!",
-        });
+        toast({ title: "Success", description: "Lecture created successfully!" });
       }
       
       setLocation('/admin');
@@ -138,9 +223,7 @@ export default function CreateLecture() {
     }
   };
 
-  if (userProfile?.role !== 'teacher') {
-    return null;
-  }
+  if (userProfile?.role !== 'teacher') return null;
 
   if (initialLoading) {
     return (
@@ -176,52 +259,21 @@ export default function CreateLecture() {
             </p>
           </div>
           <nav className="px-3">
-            <Link href="/admin">
-              <a className="admin-sidebar-link flex items-center px-3 py-3 rounded-md mb-1 text-sm text-muted-foreground" data-testid="link-dashboard">
-                <BarChart3 className="w-5 h-5 mr-3" />
-                Dashboard
-              </a>
-            </Link>
-            <Link href="/admin/lectures">
-              <a className="admin-sidebar-link flex items-center px-3 py-3 rounded-md mb-1 text-sm text-muted-foreground" data-testid="link-lectures">
-                <Book className="w-5 h-5 mr-3" />
-                All Lectures
-              </a>
-            </Link>
-            <Link href="/admin/create">
-              <a className="admin-sidebar-link active flex items-center px-3 py-3 rounded-md mb-1 text-sm" data-testid="link-create">
-                <PlusCircle className="w-5 h-5 mr-3" />
-                {isEditing ? 'Edit Lecture' : 'Create Lecture'}
-              </a>
-            </Link>
-            <Link href="/admin/students">
-              <a className="admin-sidebar-link flex items-center px-3 py-3 rounded-md mb-1 text-sm text-muted-foreground" data-testid="link-students">
-                <Users className="w-5 h-5 mr-3" />
-                Students
-              </a>
-            </Link>
-            <Link href="/admin/settings">
-              <a className="admin-sidebar-link flex items-center px-3 py-3 rounded-md mb-1 text-sm text-muted-foreground" data-testid="link-settings">
-                <Settings className="w-5 h-5 mr-3" />
-                Settings
-              </a>
-            </Link>
+            <Link href="/admin"><a className="admin-sidebar-link flex items-center px-3 py-3 rounded-md mb-1 text-sm text-muted-foreground"><BarChart3 className="w-5 h-5 mr-3" />Dashboard</a></Link>
+            <Link href="/admin/lectures"><a className="admin-sidebar-link flex items-center px-3 py-3 rounded-md mb-1 text-sm text-muted-foreground"><Book className="w-5 h-5 mr-3" />All Lectures</a></Link>
+            <Link href="/admin/create"><a className="admin-sidebar-link active flex items-center px-3 py-3 rounded-md mb-1 text-sm"><PlusCircle className="w-5 h-5 mr-3" />{isEditing ? 'Edit Lecture' : 'Create Lecture'}</a></Link>
+            <Link href="/admin/students"><a className="admin-sidebar-link flex items-center px-3 py-3 rounded-md mb-1 text-sm text-muted-foreground"><Users className="w-5 h-5 mr-3" />Students</a></Link>
+            <Link href="/admin/settings"><a className="admin-sidebar-link flex items-center px-3 py-3 rounded-md mb-1 text-sm text-muted-foreground"><Settings className="w-5 h-5 mr-3" />Settings</a></Link>
           </nav>
         </aside>
 
         {/* Main Content */}
         <main className="flex-1 p-8">
-          {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="text-page-title">
-              {isEditing ? 'Edit Lecture' : 'Create New Lecture'}
-            </h1>
-            <p className="text-muted-foreground" data-testid="text-page-description">
-              {isEditing ? 'Make changes to your existing lecture' : 'Fill in the details below to create a new lecture for students'}
-            </p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{isEditing ? 'Edit Lecture' : 'Create New Lecture'}</h1>
+            <p className="text-muted-foreground">{isEditing ? 'Make changes to your existing lecture' : 'Fill in the details below to create a new lecture'}</p>
           </div>
 
-          {/* Lecture Form */}
           <form onSubmit={(e) => handleSubmit(e)} className="space-y-6">
             {/* Title Input */}
             <div className="bg-card rounded-lg shadow-md p-6">
@@ -238,6 +290,35 @@ export default function CreateLecture() {
                 required
                 data-testid="input-title"
               />
+            </div>
+            {/* Card Display Options */}
+            <div className="bg-card rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Card Display</h3>
+                <div className="space-y-4">
+                    <div>
+                        <Label htmlFor="card-image-url" className="block text-sm font-medium text-foreground mb-2">
+                        Card Image URL
+                        </Label>
+                        <Input
+                        type="text"
+                        id="card-image-url"
+                        value={formData.cardImageUrl}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cardImageUrl: e.target.value }))}
+                        placeholder="https://example.com/image.png"
+                        />
+                    </div>
+                    <div>
+                        <Label htmlFor="card-description" className="block text-sm font-medium text-foreground mb-2">
+                        Card Description
+                        </Label>
+                        <Textarea
+                        id="card-description"
+                        value={formData.cardDescription}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cardDescription: e.target.value }))}
+                        placeholder="A brief summary that will appear on the lecture card."
+                        />
+                    </div>
+                </div>
             </div>
 
             {/* Category and Author */}
@@ -295,13 +376,132 @@ export default function CreateLecture() {
                 </span>
               </p>
             </div>
+            
+            {/* Quiz Builder */}
+            <div className="bg-card rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Quiz Builder</h3>
+              {formData.quiz.map((q, qIndex) => (
+                <div key={q.id || qIndex} className="border border-border rounded-lg p-4 mb-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <Label className="text-md font-medium">Question {qIndex + 1}</Label>
+                    <Button variant="ghost" size="icon" onClick={() => removeQuestion(qIndex)}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <Input
+                    placeholder="Enter your question"
+                    value={q.question}
+                    onChange={(e) => handleQuizChange(qIndex, { ...q, question: e.target.value })}
+                    className="mb-4"
+                  />
+                  <RadioGroup
+                    value={q.correctAnswer.toString()}
+                    onValueChange={(value) => handleQuizChange(qIndex, { ...q, correctAnswer: parseInt(value) })}
+                  >
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} className="flex items-center gap-2 mb-2">
+                        <RadioGroupItem value={oIndex.toString()} id={`${q.id}-opt-${oIndex}`} />
+                        <Input
+                          placeholder={`Option ${oIndex + 1}`}
+                          value={opt}
+                          onChange={(e) => {
+                            const newOptions = [...q.options];
+                            newOptions[oIndex] = e.target.value;
+                            handleQuizChange(qIndex, { ...q, options: newOptions });
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              ))}
+              <Button type="button" variant="outline" onClick={addQuestion}>
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
 
+            {/* Simulation Builder */}
+            <div className="bg-card rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-foreground">Simulation Builder</h3>
+                {formData.simulation && <Button variant="destructive" size="sm" onClick={handleRemoveSimulation}><Trash2 className="w-4 h-4 mr-2" />Remove Simulation</Button>}
+              </div>
+              {!formData.simulation ? (
+                <Button type="button" variant="outline" onClick={handleAddSimulation}><GitBranchPlus className="w-4 h-4 mr-2" />Add Simulation</Button>
+              ) : (
+                <div className="space-y-6">
+                  {formData.simulation.steps.map((step, stepIndex) => (
+                    <div key={step.id} className="border border-border rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <Label className="text-md font-medium">Step {stepIndex + 1} {formData.simulation?.startStepId === step.id && <span className="text-xs font-normal text-primary ml-2">(Start)</span>}</Label>
+                        <Button variant="ghost" size="icon" onClick={() => handleRemoveStep(step.id)} disabled={formData.simulation?.startStepId === step.id}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                      </div>
+                      <Textarea
+                        placeholder="Enter the scenario description for this step..."
+                        value={step.scenario}
+                        onChange={(e) => {
+                          const newSteps = [...formData.simulation!.steps];
+                          newSteps[stepIndex].scenario = e.target.value;
+                          handleSimulationChange({ ...formData.simulation!, steps: newSteps });
+                        }}
+                      />
+                      <div className="mt-4">
+                        <Label className="text-sm font-medium">Choices</Label>
+                        <div className="space-y-3 mt-2">
+                          {step.choices.map((choice, choiceIndex) => (
+                             <div key={choice.id} className="flex items-center gap-2">
+                               <Input
+                                 placeholder={`Choice ${choiceIndex + 1} text`}
+                                 value={choice.text}
+                                 onChange={(e) => {
+                                   const newSteps = [...formData.simulation!.steps];
+                                   newSteps[stepIndex].choices[choiceIndex].text = e.target.value;
+                                   handleSimulationChange({ ...formData.simulation!, steps: newSteps });
+                                 }}
+                               />
+                               <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                               <Select
+                                 value={choice.nextStepId || "end"}
+                                 onValueChange={(value) => {
+                                   const newSteps = [...formData.simulation!.steps];
+                                   newSteps[stepIndex].choices[choiceIndex].nextStepId = value === "end" ? null : value;
+                                   handleSimulationChange({ ...formData.simulation!, steps: newSteps });
+                                 }}
+                               >
+                                 <SelectTrigger className="w-[200px]"><SelectValue placeholder="Next Step" /></SelectTrigger>
+                                 <SelectContent>
+                                   <SelectItem value="end">End Simulation</SelectItem>
+                                   {formData.simulation?.steps.map((s, i) => s.id !== step.id && <SelectItem key={s.id} value={s.id}>Step {i + 1}</SelectItem>)}
+                                 </SelectContent>
+                               </Select>
+                               <Button variant="ghost" size="icon" onClick={() => {
+                                 const newSteps = [...formData.simulation!.steps];
+                                 newSteps[stepIndex].choices.splice(choiceIndex, 1);
+                                 handleSimulationChange({ ...formData.simulation!, steps: newSteps });
+                               }}><Trash2 className="w-4 h-4 text-destructive/70" /></Button>
+                             </div>
+                          ))}
+                           <Button type="button" variant="outline" size="sm" onClick={() => {
+                              const newSteps = [...formData.simulation!.steps];
+                              newSteps[stepIndex].choices.push({ id: nanoid(), text: '', nextStepId: null });
+                              handleSimulationChange({ ...formData.simulation!, steps: newSteps });
+                           }}><PlusCircle className="w-4 h-4 mr-2" />Add Choice</Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <Button type="button" variant="secondary" onClick={handleAddStep}><GitBranchPlus className="w-4 h-4 mr-2" />Add New Step</Button>
+                </div>
+              )}
+            </div>
+            
             {/* Additional Settings */}
             <div className="bg-card rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Additional Settings</h3>
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
+                  <Checkbox
                     id="published"
                     checked={formData.published}
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, published: !!checked }))}
@@ -312,7 +512,7 @@ export default function CreateLecture() {
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
+                  <Checkbox
                     id="featured"
                     checked={formData.featured}
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, featured: !!checked }))}
@@ -323,7 +523,7 @@ export default function CreateLecture() {
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
+                  <Checkbox
                     id="allowComments"
                     checked={formData.allowComments}
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allowComments: !!checked }))}
@@ -338,7 +538,7 @@ export default function CreateLecture() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-4 justify-end bg-card rounded-lg shadow-md p-6">
-              <Button 
+              <Button
                 type="button"
                 variant="outline"
                 onClick={(e) => handleSubmit(e, true)}
@@ -348,7 +548,7 @@ export default function CreateLecture() {
                 <Save className="w-4 h-4 mr-2" />
                 Save as Draft
               </Button>
-              <Button 
+              <Button
                 type="button"
                 variant="secondary"
                 disabled={loading}
@@ -357,7 +557,7 @@ export default function CreateLecture() {
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
               </Button>
-              <Button 
+              <Button
                 type="submit"
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={loading}

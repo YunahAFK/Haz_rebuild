@@ -49,12 +49,17 @@ export function LectureProvider({ children }: LectureProviderProps) {
     try {
       const q = query(collection(db, 'lectures'), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      const lecturesData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      })) as Lecture[];
+      const lecturesData = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          quiz: data.quiz || [],
+          simulation: data.simulation || undefined,
+        } as Lecture
+      });
       setLectures(lecturesData);
     } catch (error) {
       console.error('Error fetching lectures:', error);
@@ -75,6 +80,8 @@ export function LectureProvider({ children }: LectureProviderProps) {
           ...data,
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date(),
+          quiz: data.quiz || [],
+          simulation: data.simulation || undefined,
         } as Lecture;
       }
       return null;

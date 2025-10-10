@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(210, 40%, 98%);
+  --foreground: hsl(222, 47%, 11%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222, 47%, 11%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222, 47%, 11%);
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(243, 75%, 59%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(214, 32%, 91%);
+  --muted-foreground: hsl(215, 20%, 45%);
+  --accent: hsl(217, 91%, 60%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(214, 32%, 88%);
+  --input: hsl(214, 32%, 88%);
+  --ring: hsl(217, 91%, 60%);
+  --radius: 0.5rem;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+}
+
+.dark {
+  --background: hsl(222, 47%, 11%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222, 84%, 5%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(222, 84%, 5%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(243, 75%, 59%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(215, 32%, 25%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --accent: hsl(217, 91%, 60%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(215, 32%, 27%);
+  --input: hsl(215, 32%, 27%);
+  --ring: hsl(217, 91%, 60%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer components {
+  .lecture-card {
+    transition: all 0.2s ease;
+  }
+
+  .lecture-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+
+  .nav-link {
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: hsl(var(--primary));
+  }
+
+  .admin-sidebar-link {
+    transition: all 0.2s ease;
+  }
+
+  .admin-sidebar-link:hover {
+    background-color: hsl(var(--muted));
+  }
+
+  .admin-sidebar-link.active {
+    background-color: hsl(217, 91%, 95%);
+    color: hsl(var(--primary));
+    font-weight: 600;
+  }
+
+  .quill {
+    background: white;
+    border-radius: var(--radius);
+  }
+
+  .quill .ql-toolbar {
+    border-color: hsl(var(--border));
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .quill .ql-container {
+    border-color: hsl(var(--border));
+    border-radius: 0 0 var(--radius) var(--radius);
+    min-height: 400px;
+  }
+}

@@ -11,7 +11,8 @@ import LectureView from "@/pages/LectureView";
 import Login from "@/pages/Login";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CreateLecture from "@/pages/CreateLecture";
-import AllLectures from "@/pages/AllLectures"; // <-- Import the new page
+import AllLectures from "@/pages/AllLectures"; 
+import Students from "@/pages/Students";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/admin/lectures" component={AllLectures} />
       <Route path="/admin/create" component={CreateLecture} />
       <Route path="/admin/edit/:id" component={CreateLecture} />
+      <Route path="/admin/students" component={Students} />
       <Route component={NotFound} />
     </Switch>
   );

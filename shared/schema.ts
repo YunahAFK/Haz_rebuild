@@ -1,5 +1,43 @@
 import { z } from "zod";
 
+/* ===============================
+   SEQUENCING GAME SCHEMAS
+   =============================== */
+
+// defines individual item structure for sequencing games
+export const sequencingGameItemSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+});
+
+// defines overall sequencing game structure
+export const sequencingGameSchema = z.object({
+  title: z.string(),
+  items: z.array(sequencingGameItemSchema),
+});
+
+/* ===============================
+   CATEGORIZATION GAME SCHEMAS
+   =============================== */
+
+// defines a single category within a categorization game
+export const categorizationGameCategorySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  items: z.array(z.string()),
+});
+
+// defines the entire categorization game structure
+export const categorizationGameSchema = z.object({
+  title: z.string(),
+  categories: z.array(categorizationGameCategorySchema),
+});
+
+/* ===============================
+   QUIZ SCHEMAS
+   =============================== */
+
+// defines a single quiz question with options and correct answer
 export const quizQuestionSchema = z.object({
   id: z.string().optional(),
   question: z.string(),
@@ -7,23 +45,35 @@ export const quizQuestionSchema = z.object({
   correctAnswer: z.number(),
 });
 
+/* ===============================
+   SIMULATION SCHEMAS
+   =============================== */
+
+// defines a single choice leading to another simulation step
 export const simulationChoiceSchema = z.object({
   id: z.string(),
   text: z.string(),
   nextStepId: z.string().nullable(),
 });
 
+// defines a simulation step containing scenario text and choices
 export const simulationStepSchema = z.object({
   id: z.string(),
   scenario: z.string(),
   choices: z.array(simulationChoiceSchema),
 });
 
+// defines the full simulation flow starting from an initial step
 export const simulationSchema = z.object({
   startStepId: z.string(),
   steps: z.array(simulationStepSchema),
 });
 
+/* ===============================
+   LECTURE SCHEMA
+   =============================== */
+
+// defines lecture metadata, content, and linked learning activities
 export const lectureSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -38,10 +88,13 @@ export const lectureSchema = z.object({
   featured: z.boolean().default(false),
   allowComments: z.boolean().default(true),
   views: z.number().default(0),
-  simulation: simulationSchema.optional(),
   quiz: z.array(quizQuestionSchema).optional(),
+  simulation: simulationSchema.optional(),
+  sequencingGame: sequencingGameSchema.optional(),
+  categorizationGame: categorizationGameSchema.optional(),
 });
 
+// defines allowed fields when inserting a new lecture (auto fields excluded)
 export const insertLectureSchema = lectureSchema.omit({
   id: true,
   createdAt: true,
@@ -49,6 +102,11 @@ export const insertLectureSchema = lectureSchema.omit({
   views: true
 });
 
+/* ===============================
+   USER SCHEMAS
+   =============================== */
+
+// defines user data structure
 export const userSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -57,10 +115,15 @@ export const userSchema = z.object({
   createdAt: z.date(),
 });
 
+// defines allowed fields when inserting a new user
 export const insertUserSchema = userSchema.omit({
   id: true,
-  createdAt: true
+  createdAt: true,
 });
+
+/* ===============================
+   TYPE INFERENCES
+   =============================== */
 
 export type QuizQuestion = z.infer<typeof quizQuestionSchema>;
 export type Simulation = z.infer<typeof simulationSchema>;

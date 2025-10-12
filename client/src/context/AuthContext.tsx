@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { 
+import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  User as FirebaseUser
+  User as FirebaseUser,
+  createUserWithEmailAndPassword,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { User } from '@shared/schema';
 
@@ -15,6 +16,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  fetchStudents?: () => Promise<User[]>;
+  createUser?: (email: string, password: string, name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -43,6 +46,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function logout() {
     await signOut(auth);
     setUserProfile(null);
+  }
+
+  async function createUser(email: string, password: string, name: string) {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    const newProfile: Omit<User, 'id'> = {
+      name,
+      email: user.email || '',
+      role: 'student',
+      createdAt: new Date(),
+    };
+
+    await setDoc(doc(db, 'users', user.uid), newProfile);
+  }
+
+  async function fetchStudents(): Promise<User[]> {
+    const q = query(collection(db, 'users'), where('role', '==', 'student'));
+    const querySnapshot = await getDocs(q);
+    const students: User[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      students.push({
+        id: doc.id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      });
+    });
+    return students;
   }
 
   useEffect(() => {
@@ -91,7 +125,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     userProfile,
     login,
     logout,
-    loading
+    loading,
+    fetchStudents,
+    createUser
   };
 
   return (

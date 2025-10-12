@@ -12,7 +12,8 @@ import {
   ArrowRight,
   ArrowLeft,
   RefreshCw,
-  BrainCircuit
+  BrainCircuit,
+  Gamepad2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,8 +25,9 @@ import { useLectures } from '@/context/LectureContext';
 import { Lecture, QuizQuestion, Simulation, SimulationStep } from '@shared/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { EarthquakeMiniGame } from '@/components/EarthquakeMiniGame';
 
-// Helper component for the quiz interface
+// helper component for the quiz interface
 const QuizComponent = ({
   quiz,
   onComplete,
@@ -111,7 +113,7 @@ const QuizComponent = ({
   );
 };
 
-// Helper component for quiz results
+// helper component for quiz results
 const QuizResultsComponent = ({
   quiz,
   score,
@@ -170,7 +172,7 @@ const QuizResultsComponent = ({
   );
 };
 
-// Helper component for the simulation
+// helper component for the simulation
 const SimulationComponent = ({
   simulation,
   isOpen,
@@ -240,10 +242,12 @@ export default function LectureView() {
   const [relatedLectures, setRelatedLectures] = useState<Lecture[]>([]);
   const { toast } = useToast();
 
-  // State
+  // state
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizResult, setQuizResult] = useState<{ score: number; total: number; answers: (number | null)[] } | null>(null);
   const [isSimOpen, setIsSimOpen] = useState(false);
+  const [isEarthquakeGameOpen, setIsEarthquakeGameOpen] = useState(false);
+
 
   useEffect(() => {
     if (match && params?.id) {
@@ -354,6 +358,7 @@ export default function LectureView() {
 
   const hasQuiz = lecture.quiz && lecture.quiz.length > 0;
   const hasSimulation = lecture.simulation && lecture.simulation.steps.length > 0;
+  const hasEarthquakeGame = lecture.title === 'Earthquake Safety 101';
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8">
@@ -392,12 +397,20 @@ export default function LectureView() {
                 </div>
 
                 {/* Right side content (Simulation Button) */}
-                {hasSimulation && (
-                  <Button onClick={() => setIsSimOpen(true)} variant="outline" size="sm" className="shrink-0">
-                    <BrainCircuit className="w-4 h-4 mr-2" />
-                    Story Simulation
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {hasSimulation && (
+                    <Button onClick={() => setIsSimOpen(true)} variant="outline" size="sm" className="shrink-0">
+                      <BrainCircuit className="w-4 h-4 mr-2" />
+                      Story Simulation
+                    </Button>
+                  )}
+                  {hasEarthquakeGame && (
+                    <Button onClick={() => setIsEarthquakeGameOpen(true)} variant="outline" size="sm" className="shrink-0">
+                      <Gamepad2 className="w-4 h-4 mr-2" />
+                      Earthquake Game
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -448,6 +461,14 @@ export default function LectureView() {
             simulation={lecture.simulation!}
             isOpen={isSimOpen}
             onOpenChange={setIsSimOpen}
+          />
+        )}
+
+        {/* Earthquake Mini-Game Modal */}
+        {hasEarthquakeGame && (
+          <EarthquakeMiniGame
+            isOpen={isEarthquakeGameOpen}
+            onOpenChange={setIsEarthquakeGameOpen}
           />
         )}
 

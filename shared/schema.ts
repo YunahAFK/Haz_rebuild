@@ -1,22 +1,6 @@
 import { z } from "zod";
 
 /* ===============================
-   SEQUENCING GAME SCHEMAS
-   =============================== */
-
-// defines individual item structure for sequencing games
-export const sequencingGameItemSchema = z.object({
-  id: z.string(),
-  text: z.string(),
-});
-
-// defines overall sequencing game structure
-export const sequencingGameSchema = z.object({
-  title: z.string(),
-  items: z.array(sequencingGameItemSchema),
-});
-
-/* ===============================
    CATEGORIZATION GAME SCHEMAS
    =============================== */
 
@@ -90,8 +74,8 @@ export const lectureSchema = z.object({
   views: z.number().default(0),
   quiz: z.array(quizQuestionSchema).optional(),
   simulation: simulationSchema.optional(),
-  sequencingGame: sequencingGameSchema.optional(),
   categorizationGame: categorizationGameSchema.optional(),
+  earthquakeMiniGame: z.boolean().default(false).optional(),
 });
 
 // defines allowed fields when inserting a new lecture (auto fields excluded)

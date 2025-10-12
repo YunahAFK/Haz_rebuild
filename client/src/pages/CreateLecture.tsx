@@ -60,6 +60,7 @@ export default function CreateLecture() {
     simulation: Simulation | undefined;
     cardImageUrl?: string;
     cardDescription?: string;
+    earthquakeMiniGame?: boolean;
   }>({
     title: '',
     category: '',
@@ -72,6 +73,7 @@ export default function CreateLecture() {
     simulation: undefined,
     cardImageUrl: '',
     cardDescription: '',
+    earthquakeMiniGame: false,
   });
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
@@ -107,6 +109,7 @@ export default function CreateLecture() {
           simulation: lecture.simulation || undefined,
           cardImageUrl: lecture.cardImageUrl || '',
           cardDescription: lecture.cardDescription || '',
+          earthquakeMiniGame: lecture.earthquakeMiniGame || false,
         });
       }
     } catch (error) {
@@ -495,47 +498,58 @@ export default function CreateLecture() {
                 </div>
               )}
             </div>
-            
-            {/* Additional Settings */}
+
+             {/* Additional Settings */}
             <div className="bg-card rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Additional Settings</h3>
-              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Additional Settings</h3>
+                <div className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <Checkbox
+                    <Checkbox
                     id="published"
                     checked={formData.published}
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, published: !!checked }))}
                     data-testid="checkbox-published"
-                  />
-                  <Label htmlFor="published" className="text-sm text-foreground">
+                    />
+                    <Label htmlFor="published" className="text-sm text-foreground">
                     Publish immediately
-                  </Label>
+                    </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox
+                    <Checkbox
                     id="featured"
                     checked={formData.featured}
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, featured: !!checked }))}
                     data-testid="checkbox-featured"
-                  />
-                  <Label htmlFor="featured" className="text-sm text-foreground">
+                    />
+                    <Label htmlFor="featured" className="text-sm text-foreground">
                     Featured lecture
-                  </Label>
+                    </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox
+                    <Checkbox
                     id="allowComments"
                     checked={formData.allowComments}
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allowComments: !!checked }))}
                     data-testid="checkbox-comments"
-                  />
-                  <Label htmlFor="allowComments" className="text-sm text-foreground">
+                    />
+                    <Label htmlFor="allowComments" className="text-sm text-foreground">
                     Allow comments
-                  </Label>
+                    </Label>
                 </div>
-              </div>
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                    id="earthquakeMiniGame"
+                    checked={formData.earthquakeMiniGame}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, earthquakeMiniGame: !!checked }))}
+                    data-testid="checkbox-earthquake"
+                    />
+                    <Label htmlFor="earthquakeMiniGame" className="text-sm text-foreground">
+                    Enable Earthquake Mini-Game
+                    </Label>
+                </div>
+                </div>
             </div>
-
+            
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-4 justify-end bg-card rounded-lg shadow-md p-6">
               <Button

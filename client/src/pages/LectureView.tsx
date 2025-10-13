@@ -358,8 +358,8 @@ export default function LectureView() {
 
   const hasQuiz = lecture.quiz && lecture.quiz.length > 0;
   const hasSimulation = lecture.simulation && lecture.simulation.steps.length > 0;
-  const hasEarthquakeGame = lecture.title === 'Earthquake Safety 101';
-
+  const hasEarthquakeGame = lecture.earthquakeMiniGame;
+  
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">

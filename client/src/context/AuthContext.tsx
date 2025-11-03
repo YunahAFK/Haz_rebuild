@@ -6,8 +6,8 @@ import {
   User as FirebaseUser,
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import { auth, db, secondaryAuth } from '@/lib/firebase';
 import { User } from '@shared/schema';
 
 interface AuthContextType {
@@ -49,17 +49,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function createUser(email: string, password: string, name: string) {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    try {
+      // Use the secondary auth instance to create the user
+      // This prevents the auto-sign-in from affecting the main app's auth state
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const user = userCredential.user;
 
-    const newProfile: Omit<User, 'id'> = {
-      name,
-      email: user.email || '',
-      role: 'student',
-      createdAt: new Date(),
-    };
+      console.log('New user created in Firebase Auth:', user.uid);
 
-    await setDoc(doc(db, 'users', user.uid), newProfile);
+      // Immediately create user profile in Firestore
+      const newProfile = {
+        name,
+        email: user.email || '',
+        role: 'student',
+        createdAt: serverTimestamp(),
+      };
+
+      console.log('Saving to Firestore...', newProfile);
+      await setDoc(doc(db, 'users', user.uid), newProfile);
+      console.log('User saved to Firestore successfully!');
+      
+      // Sign out from the secondary auth instance (doesn't affect main app)
+      await signOut(secondaryAuth);
+      
+      console.log('Student user created successfully. Teacher remains logged in!');
+      
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      
+      // Re-throw to let the calling code handle it
+      throw error;
+    }
   }
 
   async function fetchStudents(): Promise<User[]> {

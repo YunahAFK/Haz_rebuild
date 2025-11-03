@@ -56,6 +56,10 @@
     @apply border-border;
   }
 
+  html {
+    font-size: 14px; /* Reduced from default 16px for a more compact look */
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
@@ -63,6 +67,24 @@
 }
 
 @layer components {
+  /* Reduced spacing utilities */
+  .space-y-tight > * + * {
+    margin-top: 0.25rem;
+  }
+
+  /* Tighter heading sizes */
+  h1 {
+    @apply text-2xl leading-tight; /* Reduced from default larger sizes */
+  }
+
+  h2 {
+    @apply text-xl leading-tight;
+  }
+
+  h3 {
+    @apply text-lg leading-tight;
+  }
+
   .lecture-card {
     transition: all 0.2s ease;
   }

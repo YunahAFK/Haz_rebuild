@@ -1,21 +1,33 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LectureCard } from '@/components/LectureCard';
 import { useLectures } from '@/context/LectureContext';
+import { useAuth } from '@/context/AuthContext';
 import { Lecture } from '@shared/schema';
 import { Skeleton } from '@/components/ui/skeleton';
+import Landing from './Landing';
 
 export default function Home() {
+  const { userProfile, loading: authLoading } = useAuth();
   const { lectures, loading, fetchLectures } = useLectures();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [filteredLectures, setFilteredLectures] = useState<Lecture[]>([]);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     fetchLectures();
   }, []);
+
+  // Redirect students to their dashboard only if logged in
+  useEffect(() => {
+    if (userProfile?.role === 'student') {
+      setLocation('/student/dashboard');
+    }
+  }, [userProfile]);
 
   useEffect(() => {
     let filtered = lectures.filter(lecture => lecture.published);
@@ -35,6 +47,11 @@ export default function Home() {
   }, [lectures, searchTerm, selectedCategory]);
 
   const categories = Array.from(new Set(lectures.map(lecture => lecture.category)));
+
+  // Show landing page if not authenticated
+  if (!authLoading && !userProfile) {
+    return <Landing />;
+  }
 
   if (loading) {
     return (

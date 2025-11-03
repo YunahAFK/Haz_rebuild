@@ -5,7 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
 import { LectureProvider } from "@/context/LectureContext";
+import { ProgressProvider } from "@/context/ProgressContext";
 import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import LectureView from "@/pages/LectureView";
 import Login from "@/pages/Login";
@@ -13,11 +16,13 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import CreateLecture from "@/pages/CreateLecture";
 import AllLectures from "@/pages/AllLectures"; 
 import Students from "@/pages/Students";
+import StudentDashboard from "@/pages/StudentDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/landing" component={Landing} />
       <Route path="/" component={Home} />
       <Route path="/lecture/:id" component={LectureView} />
       <Route path="/login" component={Login} />
@@ -26,6 +31,7 @@ function Router() {
       <Route path="/admin/create" component={CreateLecture} />
       <Route path="/admin/edit/:id" component={CreateLecture} />
       <Route path="/admin/students" component={Students} />
+      <Route path="/student/dashboard" component={StudentDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -35,15 +41,20 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <LectureProvider>
-          <TooltipProvider>
-            <div className="min-h-screen bg-background">
-              <Navigation />
-              <Router />
-              <Toaster />
-            </div>
-          </TooltipProvider>
-        </LectureProvider>
+        <ProgressProvider>
+          <LectureProvider>
+            <TooltipProvider>
+              <div className="min-h-screen flex flex-col bg-background">
+                <Navigation />
+                <main className="flex-1">
+                  <Router />
+                </main>
+                <Footer />
+                <Toaster />
+              </div>
+            </TooltipProvider>
+          </LectureProvider>
+        </ProgressProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

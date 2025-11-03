@@ -61,6 +61,7 @@ export default function CreateLecture() {
     cardImageUrl?: string;
     cardDescription?: string;
     earthquakeMiniGame?: boolean;
+    floodingMiniGame?: boolean;
   }>({
     title: '',
     category: '',
@@ -74,6 +75,7 @@ export default function CreateLecture() {
     cardImageUrl: '',
     cardDescription: '',
     earthquakeMiniGame: false,
+    floodingMiniGame: false,
   });
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
@@ -110,6 +112,7 @@ export default function CreateLecture() {
           cardImageUrl: lecture.cardImageUrl || '',
           cardDescription: lecture.cardDescription || '',
           earthquakeMiniGame: lecture.earthquakeMiniGame || false,
+          floodingMiniGame: lecture.floodingMiniGame || false,
         });
       }
     } catch (error) {
@@ -176,13 +179,16 @@ export default function CreateLecture() {
   const handleRemoveStep = (stepId: string) => {
     if (!formData.simulation) return;
     const newSim = { ...formData.simulation };
-    // Filter out the step to be removed
+
+    // filter out the step to be removed
     newSim.steps = newSim.steps.filter(step => step.id !== stepId);
-    // Remove choices in other steps that point to the deleted step
+
+    // remove choices in other steps that point to the deleted step
     newSim.steps.forEach(step => {
       step.choices = step.choices.filter(choice => choice.nextStepId !== stepId);
     });
-    // If we deleted the start step, reset the simulation
+
+    // if we deleted the start step, reset the simulation
     if (newSim.startStepId === stepId) {
       handleRemoveSimulation();
     } else {
@@ -545,6 +551,17 @@ export default function CreateLecture() {
                     />
                     <Label htmlFor="earthquakeMiniGame" className="text-sm text-foreground">
                     Enable Earthquake Mini-Game
+                    </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                    id="floodingMiniGame"
+                    checked={formData.floodingMiniGame}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, floodingMiniGame: !!checked }))}
+                    data-testid="checkbox-flooding"
+                    />
+                    <Label htmlFor="floodingMiniGame" className="text-sm text-foreground">
+                    Enable Flooding Mini-Game
                     </Label>
                 </div>
                 </div>

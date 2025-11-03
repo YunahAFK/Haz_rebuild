@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Shield } from 'lucide-react';
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -49,12 +49,38 @@ export default function Login() {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-primary/5 to-secondary/5">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-lg shadow-xl p-8">
+    <section className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-primary/5">
+        {/* Geometric Shapes */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
+        
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: `
+            linear-gradient(to right, currentColor 1px, transparent 1px),
+            linear-gradient(to bottom, currentColor 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px'
+        }} />
+        
+        {/* Floating Shapes */}
+        <div className="absolute top-40 right-20 w-32 h-32 bg-primary/20 rounded-lg rotate-12 blur-xl" />
+        <div className="absolute bottom-40 left-20 w-24 h-24 bg-secondary/20 rounded-full blur-lg" />
+        <div className="absolute top-1/3 right-1/4 w-16 h-16 bg-primary/15 rounded-md rotate-45 blur-md" />
+      </div>
+
+      {/* Login Card */}
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-card/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 p-8">
           {/* Logo and Title */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-primary mb-2" data-testid="text-logo">HAZ</h1>
+                         <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-xl mb-4">
+               <Shield className="w-8 h-8 text-primary-foreground" />
+             </div>
+            <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="text-logo">HAZ</h1>
             <p className="text-muted-foreground" data-testid="text-subtitle">Sign in to continue</p>
           </div>
 
@@ -117,7 +143,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
               disabled={loading}
               data-testid="button-signin"
             >

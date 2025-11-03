@@ -14,6 +14,9 @@ import {
   RefreshCw,
   BrainCircuit,
   Gamepad2,
+  BookOpen,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,10 +25,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { useLectures } from '@/context/LectureContext';
+import { useProgress } from '@/context/ProgressContext';
 import { Lecture, QuizQuestion, Simulation, SimulationStep } from '@shared/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { EarthquakeMiniGame } from '@/components/EarthquakeMiniGame';
+import { FloodingMiniGame } from '@/components/FloodingMiniGame';
 
 // helper component for the quiz interface
 const QuizComponent = ({
@@ -237,16 +242,19 @@ const SimulationComponent = ({
 export default function LectureView() {
   const [match, params] = useRoute('/lecture/:id');
   const { fetchLectureById, lectures } = useLectures();
+  const { saveQuizResult, markLectureViewed, getQuizResult } = useProgress();
   const [lecture, setLecture] = useState<Lecture | null>(null);
   const [loading, setLoading] = useState(true);
   const [relatedLectures, setRelatedLectures] = useState<Lecture[]>([]);
   const { toast } = useToast();
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Visible by default on desktop
 
   // state
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizResult, setQuizResult] = useState<{ score: number; total: number; answers: (number | null)[] } | null>(null);
   const [isSimOpen, setIsSimOpen] = useState(false);
   const [isEarthquakeGameOpen, setIsEarthquakeGameOpen] = useState(false);
+  const [isFloodingGameOpen, setIsFloodingGameOpen] = useState(false);
 
 
   useEffect(() => {
@@ -272,6 +280,11 @@ export default function LectureView() {
     try {
       const lectureData = await fetchLectureById(id);
       setLecture(lectureData);
+      
+      // Mark lecture as viewed
+      if (lectureData) {
+        await markLectureViewed(id, lectureData.title);
+      }
     } catch (error) {
       console.error('Error loading lecture:', error);
     } finally {
@@ -303,8 +316,13 @@ export default function LectureView() {
     });
   };
 
-  const handleQuizComplete = (score: number, total: number, answers: (number | null)[]) => {
+  const handleQuizComplete = async (score: number, total: number, answers: (number | null)[]) => {
     setQuizResult({ score, total, answers });
+    
+    // Save quiz result to progress tracking
+    if (lecture && params?.id) {
+      await saveQuizResult(params.id, lecture.title, score, total);
+    }
   };
 
   const handleRetakeQuiz = () => {
@@ -359,144 +377,365 @@ export default function LectureView() {
   const hasQuiz = lecture.quiz && lecture.quiz.length > 0;
   const hasSimulation = lecture.simulation && lecture.simulation.steps.length > 0;
   const hasEarthquakeGame = lecture.earthquakeMiniGame;
-  
+  const hasFloodingGame = lecture.floodingMiniGame;
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
-    <div className="py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="mb-6 text-sm text-muted-foreground" data-testid="breadcrumb">
-          <Link href="/"><a className="hover:text-primary transition">Home</a></Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{lecture.title}</span>
-        </nav>
+    <div className="flex">
+      {/* Desktop Sidebar (collapses to icon rail) */}
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-14'} hidden lg:flex transition-all duration-300 bg-card border-r border-border sticky top-16 h-[calc(100vh-4rem)] overflow-hidden flex-shrink-0` }>
+        <div className="h-full flex flex-col">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            {sidebarOpen && <h2 className="text-sm font-semibold text-foreground">Lecture Navigation</h2>}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Collapse navigation' : 'Expand navigation'}
+              className="w-8 h-8"
+            >
+              {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </Button>
+          </div>
 
-        {/* Lecture Header */}
-        <article className="bg-card rounded-lg shadow-lg overflow-hidden">
-          <div className="h-64 bg-gradient-to-br from-primary to-secondary relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-8xl text-white opacity-20">📚</div>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/60 to-transparent">
-              {/* Flex container to position content */}
-              <div className="flex justify-between items-end">
-                {/* Left side content */}
-                <div>
-                  <span className="inline-block bg-white/90 text-primary text-sm font-semibold px-3 py-1 rounded mb-3 capitalize">
-                    {lecture.category}
-                  </span>
-                  <div className="flex items-center gap-4">
-                    <h1 className="text-4xl font-bold text-white mb-2">
-                      {lecture.title}
-                    </h1>
-                  </div>
-                  <div className="flex items-center space-x-4 text-white/90 text-sm">
-                    <span className="flex items-center"><User className="w-4 h-4 mr-2" />{lecture.author}</span>
-                    <span className="flex items-center"><Calendar className="w-4 h-4 mr-2" />{lecture.createdAt.toLocaleDateString()}</span>
-                    <span className="flex items-center"><Clock className="w-4 h-4 mr-2" />{Math.ceil(lecture.content.split(' ').length / 200)} min read</span>
-                  </div>
-                </div>
+          {/* Navigation Menu */}
+          <nav className={`${sidebarOpen ? 'flex-1 overflow-y-auto p-4 space-y-2' : 'flex-1 overflow-y-auto py-4 space-y-2 flex flex-col items-center'}`}>
+            <button
+              title="Content"
+              onClick={() => scrollToSection('content-section')}
+              className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+            >
+              <BookOpen className="w-4 h-4 text-muted-foreground" />
+              {sidebarOpen && <span className="text-sm font-medium">Content</span>}
+            </button>
 
-                {/* Right side content (Simulation Button) */}
-                <div className="flex items-center gap-2">
-                  {hasSimulation && (
-                    <Button onClick={() => setIsSimOpen(true)} variant="outline" size="sm" className="shrink-0">
-                      <BrainCircuit className="w-4 h-4 mr-2" />
-                      Story Simulation
-                    </Button>
-                  )}
-                  {hasEarthquakeGame && (
-                    <Button onClick={() => setIsEarthquakeGameOpen(true)} variant="outline" size="sm" className="shrink-0">
-                      <Gamepad2 className="w-4 h-4 mr-2" />
-                      Earthquake Game
-                    </Button>
-                  )}
+            {hasQuiz && (
+              <button
+                title="Quiz"
+                onClick={() => {
+                  setShowQuiz(true);
+                  scrollToSection('quiz-section');
+                }}
+                className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'w-full flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+              >
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                {sidebarOpen && <span className="text-sm font-medium">Quiz</span>}
+              </button>
+            )}
+
+            {hasSimulation && (
+                <button
+                  title="Simulation"
+                  onClick={() => setIsSimOpen(true)}
+                  className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'w-full flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+                >
+                  <BrainCircuit className="w-4 h-4 text-muted-foreground" />
+                  {sidebarOpen && <span className="text-sm font-medium">Simulation</span>}
+                </button>
+            )}
+
+            {(hasEarthquakeGame || hasFloodingGame) && (
+              <div className="pt-2">
+                {sidebarOpen && <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 px-4">Mini-Games</p>}
+                {hasEarthquakeGame && (
+                    <button
+                      title="Earthquake Game"
+                      onClick={() => setIsEarthquakeGameOpen(true)}
+                      className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'w-full flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+                    >
+                      <Gamepad2 className="w-4 h-4 text-muted-foreground" />
+                      {sidebarOpen && <span className="text-sm font-medium">Earthquake Game</span>}
+                    </button>
+                )}
+                {hasFloodingGame && (
+                    <button
+                      title="Flooding Game"
+                      onClick={() => setIsFloodingGameOpen(true)}
+                      className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'w-full flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+                    >
+                      <Gamepad2 className="w-4 h-4 text-muted-foreground" />
+                      {sidebarOpen && <span className="text-sm font-medium">Flooding Game</span>}
+                    </button>
+                )}
+              </div>
+            )}
+          </nav>
+        </div>
+      </aside>
+
+      {/* Sidebar Overlay for Mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:hidden fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-card border-r border-border z-50 transition-transform duration-300 overflow-hidden flex-shrink-0`}>
+        <div className="h-full flex flex-col">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">Lecture Navigation</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(false)}
+              className="w-6 h-6"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Navigation Menu */}
+          <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+            <button
+              onClick={() => {
+                scrollToSection('content-section');
+                setSidebarOpen(false);
+              }}
+              className="w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
+            >
+              <BookOpen className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Content</span>
+            </button>
+
+            {hasQuiz && (
+              <button
+                title="Quiz"
+                onClick={() => {
+                  setShowQuiz(true);
+                  scrollToSection('quiz-section');
+                  setSidebarOpen(false);
+                }}
+                className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+              >
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                {sidebarOpen && <span className="text-sm font-medium">Quiz</span>}
+              </button>
+            )}
+
+            {hasSimulation && (
+              <button
+                title="Simulation"
+                onClick={() => {
+                  setIsSimOpen(true);
+                  setSidebarOpen(false);
+                }}
+                className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+              >
+                <BrainCircuit className="w-4 h-4 text-muted-foreground" />
+                {sidebarOpen && <span className="text-sm font-medium">Simulation</span>}
+              </button>
+            )}
+
+            {(hasEarthquakeGame || hasFloodingGame) && (
+              <div className="pt-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 px-4">Mini-Games</p>
+                {hasEarthquakeGame && (
+                  <button
+                    title="Earthquake Game"
+                    onClick={() => {
+                      setIsEarthquakeGameOpen(true);
+                      setSidebarOpen(false);
+                    }}
+                    className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+                  >
+                    <Gamepad2 className="w-4 h-4 text-muted-foreground" />
+                    {sidebarOpen && <span className="text-sm font-medium">Earthquake Game</span>}
+                  </button>
+                )}
+                {hasFloodingGame && (
+                  <button
+                    title="Flooding Game"
+                    onClick={() => {
+                      setIsFloodingGameOpen(true);
+                      setSidebarOpen(false);
+                    }}
+                    className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+                  >
+                    <Gamepad2 className="w-4 h-4 text-muted-foreground" />
+                    {sidebarOpen && <span className="text-sm font-medium">Flooding Game</span>}
+                  </button>
+                )}
+              </div>
+            )}
+          </nav>
+        </div>
+      </aside>
+
+      {/* Mobile Menu Toggle Button */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="fixed top-24 left-4 z-30 p-2 rounded-lg bg-card border border-border shadow-lg lg:hidden"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      
+
+      {/* Main Content */}
+      <div className="flex-1 min-w-0">
+        <div className="py-12 px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumb */}
+          <nav className="mb-6 text-sm text-muted-foreground" data-testid="breadcrumb">
+            <Link href="/"><a className="hover:text-primary transition">Home</a></Link>
+            <span className="mx-2">/</span>
+            <span className="text-foreground">{lecture.title}</span>
+          </nav>
+
+          {/* Lecture Header */}
+          <article className="bg-card rounded-lg shadow-lg overflow-hidden" id="content-section">
+            <div className="h-64 bg-gradient-to-br from-primary to-secondary relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-8xl text-white opacity-20">📚</div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/60 to-transparent">
+                {/* Flex container to position content */}
+                <div className="flex justify-between items-end">
+                  {/* Left side content */}
+                  <div>
+                    <span className="inline-block bg-white/90 text-primary text-sm font-semibold px-3 py-1 rounded mb-3 capitalize">
+                      {lecture.category}
+                    </span>
+                    <div className="flex items-center gap-4">
+                      <h1 className="text-4xl font-bold text-white mb-2">
+                        {lecture.title}
+                      </h1>
+                    </div>
+                    <div className="flex items-center space-x-4 text-white/90 text-sm">
+                      <span className="flex items-center"><User className="w-4 h-4 mr-2" />{lecture.author}</span>
+                      <span className="flex items-center"><Calendar className="w-4 h-4 mr-2" />{lecture.createdAt.toLocaleDateString()}</span>
+                      <span className="flex items-center"><Clock className="w-4 h-4 mr-2" />{Math.ceil(lecture.content.split(' ').length / 200)} min read</span>
+                    </div>
+                  </div>
+
+                  {/* Right side content (Simulation Button) */}
+                  <div className="flex items-center gap-2">
+                    {hasSimulation && (
+                      <Button onClick={() => setIsSimOpen(true)} variant="outline" size="sm" className="shrink-0">
+                        <BrainCircuit className="w-4 h-4 mr-2" />
+                        Story Simulation
+                      </Button>
+                    )}
+                    {hasEarthquakeGame && (
+                      <Button onClick={() => setIsEarthquakeGameOpen(true)} variant="outline" size="sm" className="shrink-0">
+                        <Gamepad2 className="w-4 h-4 mr-2" />
+                        Earthquake Game
+                      </Button>
+                    )}
+                    {hasFloodingGame && (
+                      <Button onClick={() => setIsFloodingGameOpen(true)} variant="outline" size="sm" className="shrink-0">
+                        <Gamepad2 className="w-4 h-4 mr-2" />
+                        Flooding Game
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Lecture Content */}
-          <div className="p-8 md:p-12">
-            <div
-              className="prose prose-lg max-w-none text-foreground"
-              dangerouslySetInnerHTML={{ __html: lecture.content }}
-            />
+            {/* Lecture Content */}
+            <div className="p-8 md:p-12">
+              <div
+                className="prose prose-lg max-w-none text-foreground"
+                dangerouslySetInnerHTML={{ __html: lecture.content }}
+              />
 
-            {/* Action Buttons */}
-            <div className="mt-10 pt-8 border-t border-border flex flex-wrap gap-4">
-              {hasQuiz && (
-                <Button
-                  onClick={() => setShowQuiz(!showQuiz)}
-                  className="flex-1 sm:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  {showQuiz ? 'Hide Quiz' : 'Take Quiz'}
+              {/* Action Buttons */}
+              <div className="mt-10 pt-8 border-t border-border flex flex-wrap gap-4">
+                {hasQuiz && (
+                  <Button
+                    onClick={() => setShowQuiz(!showQuiz)}
+                    className="flex-1 sm:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <HelpCircle className="w-4 h-4 mr-2" />
+                    {showQuiz ? 'Hide Quiz' : 'Take Quiz'}
+                  </Button>
+                )}
+                <Button onClick={handleShare} variant="outline" className="flex-1 sm:flex-none">
+                  <Share className="w-4 h-4 mr-2" />
+                  Share
                 </Button>
-              )}
-              <Button onClick={handleShare} variant="outline" className="flex-1 sm:flex-none">
-                <Share className="w-4 h-4 mr-2" />
-                Share
-              </Button>
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
 
-        {/* Quiz Section */}
-        {showQuiz && hasQuiz && !quizResult && (
-          <QuizComponent quiz={lecture.quiz!} onComplete={handleQuizComplete} />
-        )}
-        {showQuiz && hasQuiz && quizResult && (
-          <QuizResultsComponent
-            quiz={lecture.quiz!}
-            score={quizResult.score}
-            total={quizResult.total}
-            userAnswers={quizResult.answers}
-            onRetake={handleRetakeQuiz}
-          />
-        )}
+                     {/* Quiz Section */}
+           {showQuiz && hasQuiz && !quizResult && (
+             <div id="quiz-section">
+               <QuizComponent quiz={lecture.quiz!} onComplete={handleQuizComplete} />
+             </div>
+           )}
+           {showQuiz && hasQuiz && quizResult && (
+             <div id="quiz-section">
+               <QuizResultsComponent
+                 quiz={lecture.quiz!}
+                 score={quizResult.score}
+                 total={quizResult.total}
+                 userAnswers={quizResult.answers}
+                 onRetake={handleRetakeQuiz}
+               />
+             </div>
+           )}
 
-        {/* Simulation Modal */}
-        {hasSimulation && (
-          <SimulationComponent
-            simulation={lecture.simulation!}
-            isOpen={isSimOpen}
-            onOpenChange={setIsSimOpen}
-          />
-        )}
+          {/* Simulation Modal */}
+          {hasSimulation && (
+            <SimulationComponent
+              simulation={lecture.simulation!}
+              isOpen={isSimOpen}
+              onOpenChange={setIsSimOpen}
+            />
+          )}
 
-        {/* Earthquake Mini-Game Modal */}
-        {hasEarthquakeGame && (
-          <EarthquakeMiniGame
-            isOpen={isEarthquakeGameOpen}
-            onOpenChange={setIsEarthquakeGameOpen}
-          />
-        )}
+          {/* Earthquake Mini-Game Modal */}
+          {hasEarthquakeGame && (
+            <EarthquakeMiniGame
+              isOpen={isEarthquakeGameOpen}
+              onOpenChange={setIsEarthquakeGameOpen}
+            />
+          )}
 
-        {/* Related Lectures */}
-        {relatedLectures.length > 0 && (
-          <div className="mt-12">
-            <h3 className="text-2xl font-bold text-foreground mb-6" data-testid="text-related-title">
-              Related Lectures
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="related-lectures">
-              {relatedLectures.map((relatedLecture) => (
-                <Link key={relatedLecture.id} href={`/lecture/${relatedLecture.id}`}>
-                  <div className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer" data-testid={`card-related-${relatedLecture.id}`}>
-                    <h4 className="text-lg font-semibold text-foreground mb-2" data-testid={`text-related-title-${relatedLecture.id}`}>
-                      {relatedLecture.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-3" data-testid={`text-related-description-${relatedLecture.id}`}>
-                      {relatedLecture.content.replace(/<[^>]*>/g, '').substring(0, 100)}...
-                    </p>
-                    <span className="text-xs text-primary font-medium" data-testid={`text-related-meta-${relatedLecture.id}`}>
-                      {relatedLecture.author} • {Math.ceil(relatedLecture.content.split(' ').length / 200)} min read
-                    </span>
-                  </div>
-                </Link>
-              ))}
+          {hasFloodingGame && (
+            <FloodingMiniGame
+              isOpen={isFloodingGameOpen}
+              onOpenChange={setIsFloodingGameOpen}
+            />
+          )}
+
+          {/* Related Lectures */}
+          {relatedLectures.length > 0 && (
+            <div className="mt-12" id="related-lectures">
+              <h3 className="text-2xl font-bold text-foreground mb-6" data-testid="text-related-title">
+                Related Lectures
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="related-lectures">
+                {relatedLectures.map((relatedLecture) => (
+                  <Link key={relatedLecture.id} href={`/lecture/${relatedLecture.id}`}>
+                    <div className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer" data-testid={`card-related-${relatedLecture.id}`}>
+                      <h4 className="text-lg font-semibold text-foreground mb-2" data-testid={`text-related-title-${relatedLecture.id}`}>
+                        {relatedLecture.title}
+                      </h4>
+                      <p className="text-sm text-muted-foreground mb-3" data-testid={`text-related-description-${relatedLecture.id}`}>
+                        {relatedLecture.content.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                      </p>
+                      <span className="text-xs text-primary font-medium" data-testid={`text-related-meta-${relatedLecture.id}`}>
+                        {relatedLecture.author} • {Math.ceil(relatedLecture.content.split(' ').length / 200)} min read
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -76,6 +76,7 @@ export const lectureSchema = z.object({
   simulation: simulationSchema.optional(),
   categorizationGame: categorizationGameSchema.optional(),
   earthquakeMiniGame: z.boolean().default(false).optional(),
+  floodingMiniGame: z.boolean().default(false).optional(),
 });
 
 // defines allowed fields when inserting a new lecture (auto fields excluded)

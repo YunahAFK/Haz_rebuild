@@ -55,15 +55,20 @@ export default function Students() {
             await createUser(email, password, name);
             toast({
                 title: 'Student Created',
-                description: 'The new student account has been created.',
+                description: 'The new student account has been created successfully.',
             });
+            // Reset form fields
+            setName('');
+            setEmail('');
+            setPassword('');
             setCreateModalOpen(false);
-            loadStudents(); // Refresh student list
+            // Refresh the student list to show the new student
+            loadStudents();
         }
     } catch (error: any) {
       toast({
         title: 'Error creating student',
-        description: error.message,
+        description: error.message || 'Failed to create student account. Please try again.',
         variant: 'destructive',
       });
     }
@@ -125,7 +130,9 @@ export default function Students() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">Manage Students</h1>
-              <p className="text-muted-foreground">View and create student accounts.</p>
+              <p className="text-muted-foreground">
+                {loading ? 'Loading...' : `${students.length} student${students.length !== 1 ? 's' : ''} registered`}
+              </p>
             </div>
             <Button onClick={() => setCreateModalOpen(true)}>
               <PlusCircle className="w-4 h-4 mr-2" />
@@ -148,8 +155,16 @@ export default function Students() {
                     <tr>
                       <td colSpan={3} className="px-6 py-4 text-center text-muted-foreground">Loading students...</td>
                     </tr>
+                  ) : students.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">
+                        <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-base">No students found</p>
+                        <p className="text-sm mt-1">Create a new student account to get started.</p>
+                      </td>
+                    </tr>
                   ) : students.map(student => (
-                    <tr key={student.id}>
+                    <tr key={student.id} className="hover:bg-muted/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{student.name}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{student.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{student.createdAt.toLocaleDateString()}</td>

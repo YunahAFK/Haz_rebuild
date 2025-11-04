@@ -389,10 +389,10 @@ export default function LectureView() {
   return (
     <div className="flex">
       {/* Desktop Sidebar (collapses to icon rail) */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-14'} hidden lg:flex transition-all duration-300 bg-card border-r border-border sticky top-16 h-[calc(100vh-4rem)] overflow-hidden flex-shrink-0` }>
+      <aside className={`${sidebarOpen ? 'w-50' : 'w-16'} hidden lg:flex transition-all duration-300 bg-card border-r border-border sticky top-16 h-[calc(100vh-4rem)] overflow-hidden flex-shrink-0`}>
         <div className="h-full flex flex-col">
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className={`p-4 border-b border-border flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
             {sidebarOpen && <h2 className="text-sm font-semibold text-foreground">Lecture Navigation</h2>}
             <Button
               variant="ghost"
@@ -410,7 +410,7 @@ export default function LectureView() {
             <button
               title="Content"
               onClick={() => scrollToSection('content-section')}
-              className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
+              className={`${sidebarOpen ? 'w-full flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors text-left' : 'w-full flex items-center justify-center px-0 py-3 rounded-lg hover:bg-muted/50 transition-colors'}`}
             >
               <BookOpen className="w-4 h-4 text-muted-foreground" />
               {sidebarOpen && <span className="text-sm font-medium">Content</span>}

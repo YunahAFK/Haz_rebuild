@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 import { LectureCard } from '@/components/LectureCard';
 import { useLectures } from '@/context/LectureContext';
 import { useAuth } from '@/context/AuthContext';
@@ -31,18 +32,25 @@ export default function Home() {
 
   useEffect(() => {
     let filtered = lectures.filter(lecture => lecture.published);
-    
+
     if (searchTerm) {
       filtered = filtered.filter(lecture =>
         lecture.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lecture.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(lecture => lecture.category === selectedCategory);
     }
-    
+
+    // Sort featured lectures to the top
+    filtered.sort((a, b) => {
+      if (a.featured && !b.featured) return -1;
+      if (!a.featured && b.featured) return 1;
+      return 0;
+    });
+
     setFilteredLectures(filtered);
   }, [lectures, searchTerm, selectedCategory]);
 
@@ -84,43 +92,44 @@ export default function Home() {
   return (
     <section className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-10">
-          <h2 className="text-3xl font-bold text-foreground mb-2" data-testid="text-page-title">
-            Available Lectures
-          </h2>
-          <p className="text-muted-foreground" data-testid="text-page-description">
-            Explore our comprehensive collection of learning materials
-          </p>
-        </div>
-
-        {/* Search and Filter Bar */}
-        <div className="mb-8 flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Search lectures..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-              data-testid="input-search"
-            />
+        {/* Search and Filter Bar with Header */}
+        <Card className="mb-8 p-6 bg-cover bg-center relative" style={{ backgroundImage: "url('https://i.postimg.cc/3JMKQ1x3/cozylibrary-bg.jpg')" }}>
+          <div className="absolute inset-0 bg-primary bg-opacity-80 rounded-lg"></div>
+          <div className="relative mb-6">
+            <h2 className="text-3xl font-bold text-white mb-2" data-testid="text-page-title">
+              Lectures
+            </h2>
+            <p className="text-white" data-testid="text-page-description">
+              Explore our comprehensive collection of learning materials
+            </p>
           </div>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full sm:w-48" data-testid="select-category">
-              <SelectValue placeholder="All Topics" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Topics</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category} value={category} className="capitalize">
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="relative flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Search lectures..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                data-testid="input-search"
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full sm:w-48" data-testid="select-category">
+                <SelectValue placeholder="All Topics" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Topics</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category} className="capitalize">
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
 
         {/* Lectures Grid */}
         {filteredLectures.length === 0 ? (
@@ -129,8 +138,8 @@ export default function Home() {
               No lectures found
             </h3>
             <p className="text-muted-foreground" data-testid="text-no-lectures-description">
-              {searchTerm || selectedCategory !== 'all' 
-                ? 'Try adjusting your search or filter criteria.' 
+              {searchTerm || selectedCategory !== 'all'
+                ? 'Try adjusting your search or filter criteria.'
                 : 'No published lectures are available at this time.'
               }
             </p>

@@ -127,7 +127,7 @@ export default function AdminDashboard() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-card rounded-lg shadow-md p-6 border-l-4 border-primary">
+            <div className="bg-card rounded-lg border border-border p-6 border-l-4 border-primary">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Total Lectures</p>
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            <div className="bg-card rounded-lg shadow-md p-6 border-l-4 border-secondary">
+            <div className="bg-card rounded-lg border border-border p-6 border-l-4 border-secondary">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Total Views</p>
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            <div className="bg-card rounded-lg shadow-md p-6 border-l-4 border-accent">
+            <div className="bg-card rounded-lg border border-border p-6 border-l-4 border-accent">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Active Students</p>
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            <div className="bg-card rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div className="bg-card rounded-lg border border-border p-6 border-l-4 border-green-500">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Avg. Rating</p>
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Recent Lectures Table */}
-          <div className="bg-card rounded-lg shadow-md overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="p-6 border-b border-border">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-foreground" data-testid="text-recent-lectures">

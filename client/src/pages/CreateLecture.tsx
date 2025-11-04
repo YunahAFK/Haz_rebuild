@@ -53,7 +53,6 @@ export default function CreateLecture() {
     category: string;
     author: string;
     content: string;
-    published: boolean;
     featured: boolean;
     allowComments: boolean;
     quiz: QuizQuestion[];
@@ -67,7 +66,6 @@ export default function CreateLecture() {
     category: '',
     author: userProfile?.name || '',
     content: '',
-    published: false,
     featured: false,
     allowComments: true,
     quiz: [],
@@ -79,6 +77,7 @@ export default function CreateLecture() {
   });
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
+  const [originalPublished, setOriginalPublished] = useState(false);
 
   useEffect(() => {
     if (userProfile?.role !== 'teacher') {
@@ -99,12 +98,12 @@ export default function CreateLecture() {
     try {
       const lecture = await fetchLectureById(id);
       if (lecture) {
+        setOriginalPublished(lecture.published);
         setFormData({
           title: lecture.title,
           category: lecture.category,
           author: lecture.author,
           content: lecture.content,
-          published: lecture.published,
           featured: lecture.featured,
           allowComments: lecture.allowComments,
           quiz: lecture.quiz || [],
@@ -198,7 +197,7 @@ export default function CreateLecture() {
   
   const handleSubmit = async (e: React.FormEvent, isDraft = false) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.category || !formData.content.trim()) {
       toast({
         title: "Error",
@@ -210,7 +209,7 @@ export default function CreateLecture() {
 
     setLoading(true);
     try {
-      const lectureData = { ...formData, published: isDraft ? false : formData.published };
+      const lectureData = { ...formData, published: isDraft ? false : true };
 
       if (isEditing && params?.id) {
         await updateLecture(params.id, lectureData);
@@ -219,7 +218,7 @@ export default function CreateLecture() {
         await createLecture(lectureData);
         toast({ title: "Success", description: "Lecture created successfully!" });
       }
-      
+
       setLocation('/admin');
     } catch (error) {
       toast({
@@ -285,7 +284,7 @@ export default function CreateLecture() {
 
           <form onSubmit={(e) => handleSubmit(e)} className="space-y-6">
             {/* Title Input */}
-            <div className="bg-card rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-border p-6">
               <Label htmlFor="lecture-title" className="block text-sm font-medium text-foreground mb-2">
                 Lecture Title <span className="text-destructive">*</span>
               </Label>
@@ -301,7 +300,7 @@ export default function CreateLecture() {
               />
             </div>
             {/* Card Display Options */}
-            <div className="bg-card rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-border p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Card Display</h3>
                 <div className="space-y-4">
                     <div>
@@ -332,7 +331,7 @@ export default function CreateLecture() {
 
             {/* Category and Author */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-card rounded-lg shadow-md p-6">
+              <div className="bg-card rounded-lg border border-border p-6">
                 <Label className="block text-sm font-medium text-foreground mb-2">
                   Category <span className="text-destructive">*</span>
                 </Label>
@@ -350,7 +349,7 @@ export default function CreateLecture() {
                 </Select>
               </div>
 
-              <div className="bg-card rounded-lg shadow-md p-6">
+              <div className="bg-card rounded-lg border border-border p-6">
                 <Label htmlFor="author" className="block text-sm font-medium text-foreground mb-2">
                   Author Name <span className="text-destructive">*</span>
                 </Label>
@@ -367,7 +366,7 @@ export default function CreateLecture() {
             </div>
 
             {/* Rich Text Editor */}
-            <div className="bg-card rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-border p-6">
               <Label className="block text-sm font-medium text-foreground mb-4">
                 Lecture Content <span className="text-destructive">*</span>
               </Label>
@@ -387,7 +386,7 @@ export default function CreateLecture() {
             </div>
             
             {/* Quiz Builder */}
-            <div className="bg-card rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-border p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Quiz Builder</h3>
               {formData.quiz.map((q, qIndex) => (
                 <div key={q.id || qIndex} className="border border-border rounded-lg p-4 mb-4">
@@ -431,7 +430,7 @@ export default function CreateLecture() {
             </div>
 
             {/* Simulation Builder */}
-            <div className="bg-card rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-border p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-foreground">Simulation Builder</h3>
                 {formData.simulation && <Button variant="destructive" size="sm" onClick={handleRemoveSimulation}><Trash2 className="w-4 h-4 mr-2" />Remove Simulation</Button>}
@@ -506,20 +505,9 @@ export default function CreateLecture() {
             </div>
 
              {/* Additional Settings */}
-            <div className="bg-card rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-border p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Additional Settings</h3>
                 <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                    id="published"
-                    checked={formData.published}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, published: !!checked }))}
-                    data-testid="checkbox-published"
-                    />
-                    <Label htmlFor="published" className="text-sm text-foreground">
-                    Publish immediately
-                    </Label>
-                </div>
                 <div className="flex items-center space-x-2">
                     <Checkbox
                     id="featured"
@@ -568,7 +556,7 @@ export default function CreateLecture() {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 justify-end bg-card rounded-lg shadow-md p-6">
+            <div className="flex flex-wrap gap-4 justify-end bg-card rounded-lg border border-border p-6">
               <Button
                 type="button"
                 variant="outline"
@@ -595,7 +583,7 @@ export default function CreateLecture() {
                 data-testid="button-publish"
               >
                 <Check className="w-4 h-4 mr-2" />
-                {loading ? 'Saving...' : (isEditing ? 'Update Lecture' : 'Publish Lecture')}
+                {loading ? 'Saving...' : (isEditing ? (originalPublished ? 'Update Lecture' : 'Publish Lecture') : 'Publish Lecture')}
               </Button>
             </div>
           </form>

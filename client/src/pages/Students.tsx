@@ -140,7 +140,7 @@ export default function Students() {
             </Button>
           </div>
 
-          <div className="bg-card rounded-lg shadow-md overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-muted">

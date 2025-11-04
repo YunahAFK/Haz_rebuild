@@ -12,6 +12,7 @@ import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import LectureView from "@/pages/LectureView";
 import Login from "@/pages/Login";
+import ForgotPassword from "@/pages/ForgotPassword";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CreateLecture from "@/pages/CreateLecture";
 import AllLectures from "@/pages/AllLectures"; 
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/lecture/:id" component={LectureView} />
       <Route path="/login" component={Login} />
+      <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/lectures" component={AllLectures} />
       <Route path="/admin/create" component={CreateLecture} />

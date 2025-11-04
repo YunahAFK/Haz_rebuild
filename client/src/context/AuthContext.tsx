@@ -5,6 +5,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
 import { auth, db, secondaryAuth } from '@/lib/firebase';
@@ -15,6 +16,7 @@ interface AuthContextType {
   userProfile: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
   loading: boolean;
   fetchStudents?: () => Promise<User[]>;
   createUser?: (email: string, password: string, name: string) => Promise<void>;
@@ -46,6 +48,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function logout() {
     await signOut(auth);
     setUserProfile(null);
+  }
+
+  async function forgotPassword(email: string) {
+    await sendPasswordResetEmail(auth, email);
   }
 
   async function createUser(email: string, password: string, name: string) {
@@ -145,6 +151,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     userProfile,
     login,
     logout,
+    forgotPassword,
     loading,
     fetchStudents,
     createUser

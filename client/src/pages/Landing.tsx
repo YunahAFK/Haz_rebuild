@@ -31,11 +31,11 @@ export default function Landing() {
               >
                 Get Started
               </Button>
-              <Button 
+              <Button
                 size="lg"
                 variant="outline"
                 className="text-lg px-8 py-6"
-                onClick={() => setLocation('/')}
+                onClick={() => setLocation('/?browse=1')}
               >
                 Browse Lectures
               </Button>

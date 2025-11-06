@@ -43,8 +43,11 @@ export function LectureCard({ lecture }: LectureCardProps) {
 
   const description = lecture.cardDescription || lecture.content.replace(/<[^>]*>/g, '').substring(0, 120) + '...';
 
+  // Special handling for the earthquake lecture
+  const linkHref = lecture.id === 'earthquake-hazard-lecture' ? '/earthquake-hazard-lecture' : `/lecture/${lecture.id}`;
+
   return (
-    <Link href={`/lecture/${lecture.id}`}>
+    <Link href={linkHref}>
       <div
         className="lecture-card bg-card rounded-lg shadow-md overflow-hidden cursor-pointer h-100"
         onClick={handleClick}

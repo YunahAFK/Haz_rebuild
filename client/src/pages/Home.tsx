@@ -11,6 +11,24 @@ import { Lecture } from '@shared/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import Landing from './Landing';
 
+// Mock lecture for Earthquake Hazard Lecture
+const earthquakeLecture: Lecture = {
+  id: 'earthquake-hazard-lecture',
+  title: 'Earthquake Hazards',
+  cardImageUrl: 'https://i.ytimg.com/vi/dJpIU1rSOFY/sddefault.jpg',
+  cardDescription: 'Earthquake hazards, their effects, and how to stay safe.',
+  content: 'This is an interactive lecture on earthquake hazards.',
+  author: 'HazRebuild Team',
+  category: 'science',
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  published: true,
+  featured: true,
+  allowComments: true,
+  views: 0,
+  earthquakeMiniGame: true
+};
+
 export default function Home() {
   const { userProfile, loading: authLoading } = useAuth();
   const { lectures, loading, fetchLectures } = useLectures();
@@ -32,6 +50,9 @@ export default function Home() {
 
   useEffect(() => {
     let filtered = lectures.filter(lecture => lecture.published);
+
+    // Add the mock earthquake lecture
+    filtered = [earthquakeLecture, ...filtered];
 
     if (searchTerm) {
       filtered = filtered.filter(lecture =>
@@ -56,8 +77,10 @@ export default function Home() {
 
   const categories = Array.from(new Set(lectures.map(lecture => lecture.category)));
 
-  // Show landing page if not authenticated
-  if (!authLoading && !userProfile) {
+  // Show landing page if not authenticated and not browsing lectures
+  const searchParams = new URLSearchParams(location.search);
+  const isBrowsingLectures = searchParams.get('browse') === '1';
+  if (!authLoading && !userProfile && !isBrowsingLectures) {
     return <Landing />;
   }
 

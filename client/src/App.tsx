@@ -18,6 +18,7 @@ import CreateLecture from "@/pages/CreateLecture";
 import AllLectures from "@/pages/AllLectures"; 
 import Students from "@/pages/Students";
 import StudentDashboard from "@/pages/StudentDashboard";
+import EarthquakeHazardLecture from "@/pages/EarthquakeHazardLecture";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/landing" component={Landing} />
       <Route path="/" component={Home} />
       <Route path="/lecture/:id" component={LectureView} />
+      <Route path="/earthquake-hazard-lecture" component={EarthquakeHazardLecture} />
       <Route path="/login" component={Login} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/admin" component={AdminDashboard} />

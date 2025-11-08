@@ -5,36 +5,22 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { LectureCard } from '@/components/LectureCard';
+import { MockLectureCard } from '@/components/MockLectureCard';
+import { VolcanoMockCard } from '@/components/VolcanoMockCard';
+import { HydroMockCard } from '@/components/HydroMockCard';
 import { useLectures } from '@/context/LectureContext';
 import { useAuth } from '@/context/AuthContext';
 import { Lecture } from '@shared/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import Landing from './Landing';
 
-// Mock lecture for Earthquake Hazard Lecture
-const earthquakeLecture: Lecture = {
-  id: 'earthquake-hazard-lecture',
-  title: 'Earthquake Hazards',
-  cardImageUrl: 'https://i.ytimg.com/vi/dJpIU1rSOFY/sddefault.jpg',
-  cardDescription: 'Earthquake hazards, their effects, and how to stay safe.',
-  content: 'This is an interactive lecture on earthquake hazards.',
-  author: 'HazRebuild Team',
-  category: 'science',
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2024-01-01'),
-  published: true,
-  featured: true,
-  allowComments: true,
-  views: 0,
-  earthquakeMiniGame: true
-};
 
 export default function Home() {
   const { userProfile, loading: authLoading } = useAuth();
   const { lectures, loading, fetchLectures } = useLectures();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [filteredLectures, setFilteredLectures] = useState<Lecture[]>([]);
+  const [filteredLectures, setFilteredLectures] = useState<(Lecture | null | 'volcano' | 'hydro')[]>([]);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -50,9 +36,6 @@ export default function Home() {
 
   useEffect(() => {
     let filtered = lectures.filter(lecture => lecture.published);
-
-    // Add the mock earthquake lecture
-    filtered = [earthquakeLecture, ...filtered];
 
     if (searchTerm) {
       filtered = filtered.filter(lecture =>
@@ -72,7 +55,8 @@ export default function Home() {
       return 0;
     });
 
-    setFilteredLectures(filtered);
+    // Add mock cards at the beginning
+    setFilteredLectures(['volcano', 'hydro', null, ...filtered]);
   }, [lectures, searchTerm, selectedCategory]);
 
   const categories = Array.from(new Set(lectures.map(lecture => lecture.category)));
@@ -169,12 +153,21 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="lectures-grid">
-            {filteredLectures.map((lecture) => (
-              <LectureCard key={lecture.id} lecture={lecture} />
-            ))}
+            {filteredLectures.map((lecture, index) =>
+              lecture === 'volcano' ? (
+                <VolcanoMockCard key="volcano-mock" />
+              ) : lecture === 'hydro' ? (
+                <HydroMockCard key="hydro-mock" />
+              ) : lecture === null ? (
+                <MockLectureCard key="mock-lecture" />
+              ) : (
+                <LectureCard key={lecture.id} lecture={lecture} />
+              )
+            )}
           </div>
         )}
       </div>
     </section>
   );
 }
+

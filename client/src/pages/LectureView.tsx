@@ -593,10 +593,12 @@ export default function LectureView() {
 
           {/* Lecture Header */}
           <article className="bg-card rounded-lg shadow-lg overflow-hidden" id="content-section">
-            <div className="h-64 bg-gradient-to-br from-primary to-secondary relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-8xl text-white opacity-20">📚</div>
-              </div>
+            <div className={`h-64 relative ${lecture.title.toLowerCase().includes('earthquake') ? 'bg-cover bg-center' : 'bg-gradient-to-br from-primary to-secondary'}`} style={lecture.title.toLowerCase().includes('earthquake') ? { backgroundImage: 'url(https://i.postimg.cc/LhKwzL4V/earthquakehazard-cover.jpg)' } : {}}>
+              {!lecture.title.toLowerCase().includes('earthquake') && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-8xl text-white opacity-20">📚</div>
+                </div>
+              )}
               <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/60 to-transparent">
                 {/* Flex container to position content */}
                 <div className="flex justify-between items-end">

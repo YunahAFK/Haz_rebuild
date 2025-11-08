@@ -43,8 +43,7 @@ export function LectureCard({ lecture }: LectureCardProps) {
 
   const description = lecture.cardDescription || lecture.content.replace(/<[^>]*>/g, '').substring(0, 120) + '...';
 
-  // Special handling for the earthquake lecture
-  const linkHref = lecture.id === 'earthquake-hazard-lecture' ? '/earthquake-hazard-lecture' : `/lecture/${lecture.id}`;
+  const linkHref = `/lecture/${lecture.id}`;
 
   return (
     <Link href={linkHref}>
@@ -54,7 +53,9 @@ export function LectureCard({ lecture }: LectureCardProps) {
         data-testid={`card-lecture-${lecture.id}`}
       >
         <div className={`h-48 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
-          {lecture.cardImageUrl ? (
+          {lecture.title.toLowerCase().includes('earthquake') ? (
+            <img src="https://i.postimg.cc/LhKwzL4V/earthquakehazard-cover.jpg" alt={lecture.title} className="w-full h-full object-cover" />
+          ) : lecture.cardImageUrl ? (
             <img src={lecture.cardImageUrl} alt={lecture.title} className="w-full h-full object-cover" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">

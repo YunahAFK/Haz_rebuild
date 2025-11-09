@@ -29,7 +29,7 @@ export function HydroMockCard() {
     id: 'hydro-mock-lecture',
     title: 'HYDROMETEOROLOGICAL HAZARDS',
     category: 'science',
-    author: 'Mock Author',
+    author: 'Haz Team',
     createdAt: new Date(),
     cardDescription: 'Learn about hydrometeorological hazards including floods, storms, hurricanes, and other weather-related disasters to enhance preparedness and safety.',
     cardImageUrl: 'https://i.postimg.cc/gJ6xMLbB/hydrometeorologicalhazard-cover.jpg',
@@ -40,14 +40,14 @@ export function HydroMockCard() {
   const Icon = categoryIcons[mockLecture.category as keyof typeof categoryIcons] || BookOpen;
 
   const handleClick = () => {
-    window.open('https://earthquake-hazard-edu.web.app/', '_blank');
+    window.open('https://hydrometeorological-hazard-edu.web.app/', '_blank');
   };
 
   const description = mockLecture.cardDescription || 'Mock description...';
 
   return (
     <div
-      className="lecture-card bg-card rounded-lg shadow-md overflow-hidden cursor-pointer h-100"
+      className="lecture-card bg-card rounded-lg shadow-md overflow-hidden cursor-pointer h-96"
       onClick={handleClick}
       data-testid="hydro-mock-lecture-card"
     >
@@ -73,10 +73,10 @@ export function HydroMockCard() {
         </div>
       </div>
       <div className="p-5">
-        <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2" data-testid="hydro-text-title">
+        <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-1" data-testid="hydro-text-title">
           {mockLecture.title}
         </h3>
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2 min-h-12" data-testid="hydro-text-description">
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-3 min-h-16" data-testid="hydro-text-description">
           {description}
         </p>
         <div className="flex items-center justify-between text-xs text-muted-foreground">

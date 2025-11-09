@@ -29,7 +29,7 @@ export function MockLectureCard() {
     id: 'mock-lecture',
     title: 'EARTHQUAKE HAZARDS',
     category: 'science',
-    author: 'Mock Author',
+    author: 'Haz Team',
     createdAt: new Date(),
     cardDescription: 'Learn about earthquake hazards, preparedness, and safety measures to protect yourself and your community.',
     cardImageUrl: 'https://i.postimg.cc/LhKwzL4V/earthquakehazard-cover.jpg',
@@ -47,7 +47,7 @@ export function MockLectureCard() {
 
   return (
     <div
-      className="lecture-card bg-card rounded-lg shadow-md overflow-hidden cursor-pointer h-100"
+      className="lecture-card bg-card rounded-lg shadow-md overflow-hidden cursor-pointer h-96"
       onClick={handleClick}
       data-testid="mock-lecture-card"
     >
@@ -73,10 +73,10 @@ export function MockLectureCard() {
         </div>
       </div>
       <div className="p-5">
-        <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2" data-testid="mock-text-title">
+        <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-1" data-testid="mock-text-title">
           {mockLecture.title}
         </h3>
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2 min-h-12" data-testid="mock-text-description">
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-3 min-h-16" data-testid="mock-text-description">
           {description}
         </p>
         <div className="flex items-center justify-between text-xs text-muted-foreground">

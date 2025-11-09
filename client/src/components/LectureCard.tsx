@@ -48,7 +48,7 @@ export function LectureCard({ lecture }: LectureCardProps) {
   return (
     <Link href={linkHref}>
       <div
-        className="lecture-card bg-card rounded-lg shadow-md overflow-hidden cursor-pointer h-100"
+        className="lecture-card bg-card rounded-lg shadow-md overflow-hidden cursor-pointer h-96"
         onClick={handleClick}
         data-testid={`card-lecture-${lecture.id}`}
       >
@@ -76,10 +76,10 @@ export function LectureCard({ lecture }: LectureCardProps) {
           </div>
         </div>
         <div className="p-5">
-          <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2" data-testid={`text-title-${lecture.id}`}>
+          <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-1" data-testid={`text-title-${lecture.id}`}>
             {lecture.title}
           </h3>
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2 min-h-12" data-testid={`text-description-${lecture.id}`}>
+          <p className="text-sm text-muted-foreground mb-4 line-clamp-3 min-h-16" data-testid={`text-description-${lecture.id}`}>
             {description}
           </p>
           <div className="flex items-center justify-between text-xs text-muted-foreground">

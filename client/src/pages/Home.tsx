@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { LectureCard } from '@/components/LectureCard';
 import { MockLectureCard } from '@/components/MockLectureCard';
 import { VolcanoMockCard } from '@/components/VolcanoMockCard';
@@ -21,6 +23,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [filteredLectures, setFilteredLectures] = useState<(Lecture | null | 'volcano' | 'hydro')[]>([]);
+  const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -55,14 +58,74 @@ export default function Home() {
       return 0;
     });
 
-    // Add mock cards at the beginning
-    setFilteredLectures(['volcano', 'hydro', null, ...filtered]);
+    // Define mock lectures data
+    const mockLectures = [
+      { type: 'volcano', title: 'VOLCANO-RELATED HAZARDS', category: 'science', description: 'Learn about volcano hazards, preparedness, and safety measures to protect yourself and your community.' },
+      { type: 'hydro', title: 'HYDROMETEOROLOGICAL HAZARDS', category: 'science', description: 'Learn about hydrometeorological hazards including floods, storms, hurricanes, and other weather-related disasters to enhance preparedness and safety.' },
+      { type: 'mock', title: 'EARTHQUAKE HAZARDS', category: 'science', description: 'Learn about earthquake hazards, preparedness, and safety measures to protect yourself and your community.' }
+    ];
+
+    // Filter mock lectures based on search term and category
+    let filteredMocks: ('volcano' | 'hydro' | null)[] = [];
+    if (!searchTerm && selectedCategory === 'all') {
+      // Show all mocks when no filters
+      filteredMocks = ['volcano', 'hydro', null];
+    } else {
+      // Filter mocks based on search and category
+      filteredMocks = mockLectures
+        .filter(mock => {
+          const matchesSearch = !searchTerm ||
+            mock.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            mock.description.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchesCategory = selectedCategory === 'all' || mock.category === selectedCategory;
+          return matchesSearch && matchesCategory;
+        })
+        .map(mock => mock.type === 'mock' ? null : (mock.type as 'volcano' | 'hydro'));
+    }
+
+    // Add filtered mock cards at the beginning
+    setFilteredLectures([...filteredMocks, ...filtered]);
   }, [lectures, searchTerm, selectedCategory]);
 
   const categories = Array.from(new Set(lectures.map(lecture => lecture.category)));
 
+  // Generate suggestions from lecture titles, categories, and mock data
+  const suggestions = useMemo(() => {
+    const allSuggestions = new Set<string>();
+
+    // Add lecture titles (only published lectures)
+    lectures.filter(lecture => lecture.published).forEach(lecture => {
+      allSuggestions.add(lecture.title);
+    });
+
+    // Add categories
+    categories.forEach(category => {
+      allSuggestions.add(category);
+    });
+
+    // Add mock lecture titles
+    const mockLectures = [
+      'VOLCANO-RELATED HAZARDS',
+      'HYDROMETEOROLOGICAL HAZARDS',
+      'EARTHQUAKE HAZARDS'
+    ];
+    mockLectures.forEach(title => {
+      allSuggestions.add(title);
+    });
+
+    return Array.from(allSuggestions);
+  }, [lectures, categories]);
+
+  // Filter suggestions based on search term
+  const filteredSuggestions = useMemo(() => {
+    if (!searchTerm || searchTerm.length < 2) return [];
+    return suggestions.filter(suggestion =>
+      suggestion.toLowerCase().includes(searchTerm.toLowerCase())
+    ).slice(0, 10); // Limit to 10 suggestions
+  }, [suggestions, searchTerm]);
+
   // Show landing page if not authenticated and not browsing lectures
-  const searchParams = new URLSearchParams(location.search);
+  const searchParams = new URLSearchParams(window.location.search);
   const isBrowsingLectures = searchParams.get('browse') === '1';
   if (!authLoading && !userProfile && !isBrowsingLectures) {
     return <Landing />;
@@ -112,15 +175,62 @@ export default function Home() {
           </div>
           <div className="relative flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                type="text"
-                placeholder="Search lectures..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-                data-testid="input-search"
-              />
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      type="text"
+                      placeholder="Search lectures..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setOpen(e.target.value.length >= 2);
+                      }}
+                      onKeyDown={(e) => {
+                        // Prevent default behavior that might interfere with typing
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                        }
+                      }}
+                      onFocus={() => {
+                        if (searchTerm.length >= 2) setOpen(true);
+                      }}
+                      onBlur={() => {
+                        // Delay closing to allow selection
+                        setTimeout(() => setOpen(false), 150);
+                      }}
+                      className="pl-10"
+                      data-testid="input-search"
+                      autoComplete="off"
+                    />
+                  </div>
+                </PopoverTrigger>
+                {filteredSuggestions.length > 0 && (
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+                    <Command>
+                      <CommandList>
+                        <CommandEmpty>No suggestions found.</CommandEmpty>
+                        <CommandGroup>
+                          {filteredSuggestions.map((suggestion) => (
+                            <CommandItem
+                              key={suggestion}
+                              value={suggestion}
+                              tabIndex={-1}
+                              onSelect={(value) => {
+                                setSearchTerm(value);
+                                setOpen(false);
+                              }}
+                            >
+                              {suggestion}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                )}
+              </Popover>
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full sm:w-48" data-testid="select-category">

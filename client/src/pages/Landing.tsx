@@ -2,11 +2,11 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Users, Award, Shield, GraduationCap, Sparkles } from 'lucide-react';
 
-export default function Landing() {
+export default function Landing({ setIsBrowsingLectures }: { setIsBrowsingLectures: (value: boolean) => void }) {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen grid-bg">
       {/* Hero Section */}
       <section className="relative px-4 py-24 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
@@ -35,7 +35,7 @@ export default function Landing() {
                 size="lg"
                 variant="outline"
                 className="text-lg px-8 py-6"
-                onClick={() => setLocation('/?browse=1')}
+                onClick={() => { setLocation('/?browse=1'); setIsBrowsingLectures(true); }}
               >
                 Browse Lectures
               </Button>

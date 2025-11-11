@@ -131,4 +131,9 @@
     border-radius: 0 0 var(--radius) var(--radius);
     min-height: 400px;
   }
+  .grid-bg {
+    background-image:
+      radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
 }
